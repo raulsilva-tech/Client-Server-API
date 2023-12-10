@@ -51,17 +51,17 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	if resp.StatusCode != 200 {
-		fmt.Println("StatusCode Error: ", resp.StatusCode)
-		return
-	}
-	defer resp.Body.Close()
-
 	//obtendo corpo da requisição
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		panic(err)
 	}
+
+	if resp.StatusCode != 200 {
+		fmt.Println("StatusCode Error: ", resp.StatusCode, string(bodyBytes))
+		return
+	}
+	defer resp.Body.Close()
 
 	//exibindo retorno json da requisição
 	fmt.Println(string(bodyBytes))

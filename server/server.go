@@ -52,6 +52,8 @@ func CotacaoHandler(w http.ResponseWriter, r *http.Request) {
 	data, err := GetCotacao()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"Error":"` + err.Error() + `"}`))
 		return
 	}
 	//criando header do tipo json
@@ -108,7 +110,7 @@ func GetCotacao() (*CotacaoAPI, error) {
 	}
 
 	//registrando cotação no banco de dados
-	_ = saveData(data)
+	err = saveData(data)
 
 	return &data, err
 
@@ -128,7 +130,12 @@ func saveData(data CotacaoAPI) error {
 	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*10)
 	defer cancel()
-
+	select {
+	case <-ctx.Done():
+		log.Println("Conexão com banco de dados cancelada por timeout!")
+		return errors.New("conexão com banco de dados cancelada por timeout")
+	default:
+	}
 	//inserindo nova cotação
 	db.WithContext(ctx).Create(&CotacaoDB{
 		CotacaoAPI: CotacaoAPI{
